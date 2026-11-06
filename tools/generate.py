@@ -2,8 +2,9 @@
 """Write, or with --check audit, the parts of the wrapper that follow from the headers.
 
 tools/surface.toml names the headers and classifies what the compiler cannot:
-the macros that are how the headers are written (`syntax`), and the names that
-only some targets declare (`conditional`). Everything else follows from the
+the macros that are how the headers are written (`syntax`), the names that
+only some targets declare (`conditional`), and the functions that the compat
+package does not build (`unbuilt`, not exported). Everything else follows from the
 headers as the compiler reads them (tools/api.py), with the include, define
 and target flags of the last `mcpp build` (target/**/compile_commands.json):
 
@@ -14,8 +15,11 @@ and target flags of the last `mcpp build` (target/**/compile_commands.json):
                                   mcpplibs::mwrap::<name>::macros
   include/mwrap/<name>/macros.hpp every other macro, upstream's definition
   tests/macros.cpp                each mapped constant and type against its macro
+  tests/linked.cpp                the address of each exported function, so that
+                                  the link proves the compat package defines it
 
-The include guards are recognised and omitted. --check renders the same files
+The include guards and reserved identifiers (`__x`, `_X`) are recognised and
+omitted. --check renders the same files
 in memory: on the host named by `generated-on` they must be byte-identical;
 on every host, each name the headers declare there must be exported, mapped,
 kept or classified, and each unconditional export must be declared there.
@@ -65,7 +69,9 @@ def classify(cfg, compiler, flags):
     owned = cfg.get('owned', headers)
     surface, macros = api.extract(compiler, flags, headers, owned)
     guards = api.guards(macros)
-    syntax = set(cfg.get('syntax', []))
+    # A reserved identifier (`__x`, `_X`) is the implementation's, never the library's API.
+    reserved = {n for n in macros if re.match(r'_[_A-Z]', n)}
+    syntax = set(cfg.get('syntax', [])) | reserved
     open_macros = {n: m for n, m in macros.items() if n not in guards and n not in syntax}
     constants = api.constant_macros(compiler, flags, headers, open_macros)
     types = api.type_macros(compiler, flags, headers, {n: m for n, m in open_macros.items() if n not in constants})
@@ -79,7 +85,7 @@ def render(cfg, surface, constants, types, kept):
     conditional = cfg.get('conditional', {})
     includes = '\n'.join(f'#include <{h}>' for h in cfg['headers'])
     declared = surface['functions'] | surface['variables'] | surface['types'] | surface['enumerators']
-    exported = sorted(declared - set(conditional))
+    exported = sorted(declared - set(conditional) - set(cfg.get('unbuilt', [])))
     cap = f'mwrap_{name}_capture'
 
     module = [f"// mcpplibs.mwrap.{name} --- {cfg['title']} as a C++ module. Every exported name is",
@@ -115,12 +121,14 @@ def render(cfg, surface, constants, types, kept):
               '// nor a type: they take arguments, or call a function. A named module cannot export a',
               f'// macro: include this header before `import mcpplibs.mwrap.{name};`. Each definition is',
               f"// upstream's ({cfg['title']}, {cfg['license']}), made only where the upstream header has",
-              f'// not defined it, with the constants it names read from {scope}::macros.',
+              f'// not defined it, with the constants it names read from {scope}::macros',
+              '// and NULL written nullptr.',
               '// The upstream header included after this one redefines these macros.',
               '// Written by tools/generate.py.',
               f'#ifndef {guard}', f'#define {guard}']
     for n in sorted(kept):
-        body = qualify(kept[n]['body'], set(mapped), f'{scope}::macros')
+        # A module-only unit has no NULL macro; in C++ nullptr is its meaning.
+        body = re.sub(r'\bNULL\b', 'nullptr', qualify(kept[n]['body'], set(mapped), f'{scope}::macros'))
         header += ['', f'#ifndef {n}', f"#define {n}{kept[n]['params'] or ''} {body}".rstrip(), '#endif']
     header += ['', f'#endif  // {guard}']
 
@@ -142,9 +150,20 @@ def render(cfg, surface, constants, types, kept):
     test += [f'    if (!same(m::{n}, header::value_{n})) {{ std::println("FAIL {n}"); ++differ; }}' for n in sorted(constants)]
     test += [f'    std::println("{len(constants)} constants and {len(types)} types compared, {{}} differ", differ);',
              '    return differ != 0;', '}']
+    functions = sorted(surface['functions'] - set(conditional) - set(cfg.get('unbuilt', [])))
+    linked = [f'// Every function that mcpplibs.mwrap.{name} exports, by address: the program links only',
+              f'// where compat.{cfg["compat"]} defines each one. Written by tools/generate.py.',
+              'import std;', f'import mcpplibs.mwrap.{name};', '', 'int main()', '{',
+              '    // volatile: an optimiser may not drop a reference, so each one reaches the link.',
+              '    const void* volatile functions[] = {']
+    linked += [f'        reinterpret_cast<const void*>(&{n}),' for n in functions]
+    linked += ['    };', '    int missing = 0;', '    for (const void* f : functions) missing += f == nullptr;',
+               f'    std::println("{len(functions)} functions linked, {{}} null", missing);',
+               '    return missing != 0;', '}']
     join = lambda lines: '\n'.join(lines) + '\n'
     return {f'src/{name}.cppm': join(module), 'src/macros.cppm': join(macros),
-            f'include/mwrap/{name}/macros.hpp': join(header), 'tests/macros.cpp': join(test)}
+            f'include/mwrap/{name}/macros.hpp': join(header), 'tests/macros.cpp': join(test),
+            'tests/linked.cpp': join(linked)}
 
 
 def main():
@@ -176,10 +195,11 @@ def main():
         mapped = set(re.findall(r'^#undef (\w+)$', mapping, flags=re.M))
         kept_written = set(re.findall(r'^#ifndef (\w+)$', (ROOT / f"include/mwrap/{cfg['name']}/macros.hpp")
                                       .read_text(encoding='utf-8'), flags=re.M))
-        problems += [f'declared here, not exported: {n}' for n in sorted(declared - written)]
+        problems += [f'declared here, not exported: {n}' for n in sorted(declared - written - set(cfg.get('unbuilt', [])))]
         problems += [f'exported, not declared here: {n}' for n in sorted(unconditional - declared)]
         problems += [f'macro here, neither mapped, kept nor classified: {n}' for n in sorted(
-            set(macros) - guards - set(cfg.get('syntax', [])) - mapped - kept_written)]
+            set(macros) - guards - set(cfg.get('syntax', [])) - mapped - kept_written)
+            if not re.match(r'_[_A-Z]', n)]
         problems += [f'mapped, not a constant or type here: {n}' for n in sorted(mapped - constants - types)]
     problems += [f'internal linkage, cannot be exported: {n}' for n in sorted(surface['internal'])
                  if n not in cfg.get('adapted', [])]

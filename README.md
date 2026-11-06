@@ -75,10 +75,10 @@ Linux, macOS and Windows CI build the modules with GCC and LLVM and run the
 tests: a one-shot round trip, a level-19 frame with a checksum that detects
 damage, a stream fed in pieces, a raw-content dictionary, the error code of
 garbage input, the version and the bound against their macros, every constant
-against its macro, and header mixing. CI also runs:
+against its macro, every exported function linked, and header mixing. CI also runs:
 
 - the export audit ([tools/generate.py](tools/generate.py) `--check`): the
-  module, the macro mapping, the macro header and the constant test are
+  module, the macro mapping, the macro header and the generated tests are
   regenerated from the headers as clang reads them and compared, and on macOS
   and Windows every name the headers declare there is exported;
 - four of upstream's examples over the same library
