@@ -1,0 +1,22 @@
+{
+  "upstream": "https://github.com/facebook/zstd/archive/refs/tags/v1.5.7.tar.gz",
+  "upstream_sha256": "37d7284556b20954e56e1ca85b80226768902e2edabd3b649e9e72c0c9012ee3",
+  "pruning": "Nothing of Zstandard is vendored: the library is compat.zstd 1.5.7's, from the same tarball, and the macro of include/mwrap/zstd/macros.hpp is upstream's definition, written out by tools/generate.py. Its README and both licenses are retained here. The conformance run builds four of the release's examples against compat.zstd, from the tarball downloaded at test time.",
+  "documents": [
+    {
+      "path": "upstream/zstd/README.md",
+      "source": "https://github.com/facebook/zstd/blob/v1.5.7/README.md",
+      "sha256": "c97c5752f0cf8e235e5834726968708ff1f4b3bf6bfbfcf59db0229b5889ac35"
+    },
+    {
+      "path": "upstream/zstd/LICENSE",
+      "source": "https://github.com/facebook/zstd/blob/v1.5.7/LICENSE",
+      "sha256": "7055266497633c9025b777c78eb7235af13922117480ed5c674677adc381c9d8"
+    },
+    {
+      "path": "upstream/zstd/COPYING",
+      "source": "https://github.com/facebook/zstd/blob/v1.5.7/COPYING",
+      "sha256": "f9c375a1be4a41f7b70301dd83c91cb89e41567478859b77eef375a52d782505"
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+zstd-m: C++ module wrapper
+Copyright (c) 2026 mcpp-community contributors
+
+The wrapper contributions are licensed under the Apache License, Version 2.0.
+Upstream code, copied interfaces and dependencies retain their original
+licenses and copyright notices. Zstandard is distributed under the BSD license
+or, at the recipient's choice, the GPLv2:
+
+  Copyright (c) Meta Platforms, Inc. and affiliates. All rights reserved.
+
+Its original README and both licenses are retained in upstream/zstd/. The
+library itself is provided by compat.zstd from the same release, and the macro
+of include/mwrap/zstd/macros.hpp is upstream's definition. Provenance and
+checksums are recorded in upstream/documents.json.

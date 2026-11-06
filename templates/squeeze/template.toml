@@ -1,0 +1,4 @@
+[template]
+description  = "Compression with import mcpplibs.mwrap.zstd: a text compressed at two levels with a checksum, then restored"
+default      = true
+post_message = "Run `mcpp run`, or `mcpp run -- <file>` to compress a file of your own."
