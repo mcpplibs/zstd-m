@@ -2,11 +2,13 @@
 """Write, or with --check audit, the parts of the wrapper that follow from the headers.
 
 tools/surface.toml names the headers and classifies what the compiler cannot:
-the macros that are how the headers are written (`syntax`), the names that
-only some targets declare (`conditional`), and the functions that the compat
-package does not build (`unbuilt`, not exported). Everything else follows from the
-headers as the compiler reads them (tools/api.py), with the include, define
-and target flags of the last `mcpp build` (target/**/compile_commands.json):
+the configuration that consumers share with the compat package (`defines`,
+defined before the headers), the macros that are how the headers are written
+(`syntax`), the names that only some targets declare (`conditional`), and the
+functions that the compat package does not build (`unbuilt`, not exported).
+Everything else follows from the headers as the compiler reads them
+(tools/api.py), with the include, define and target flags of the last
+`mcpp build` (target/**/compile_commands.json):
 
   src/<name>.cppm                 every function, variable, type and enumerator,
                                   `export using ::name`
@@ -19,10 +21,10 @@ and target flags of the last `mcpp build` (target/**/compile_commands.json):
                                   the link proves the compat package defines it
 
 The include guards and reserved identifiers (`__x`, `_X`) are recognised and
-omitted. --check renders the same files
-in memory: on the host named by `generated-on` they must be byte-identical;
-on every host, each name the headers declare there must be exported, mapped,
-kept or classified, and each unconditional export must be declared there.
+omitted. --check renders the same files in memory: on the host named by
+`generated-on` they must be byte-identical; on every host, each name the
+headers declare there must be exported, mapped, kept or classified, and each
+unconditional export must be declared there.
 The compiler is the clang of the build; run it after `mcpp build` with LLVM.
 """
 import argparse
@@ -65,6 +67,7 @@ def qualify(body, mapped, scope):
 
 
 def classify(cfg, compiler, flags):
+    flags = flags + [f'-D{d}' for d in cfg.get('defines', [])]
     headers = cfg['headers']
     owned = cfg.get('owned', headers)
     surface, macros = api.extract(compiler, flags, headers, owned)
@@ -83,7 +86,9 @@ def render(cfg, surface, constants, types, kept):
     name = cfg['name']
     scope = f'mcpplibs::mwrap::{name}'
     conditional = cfg.get('conditional', {})
-    includes = '\n'.join(f'#include <{h}>' for h in cfg['headers'])
+    # The configuration the compat package compiles with and its consumers must share.
+    includes = '\n'.join([f'#ifndef {d}\n#define {d}\n#endif' for d in cfg.get('defines', [])]
+                         + [f'#include <{h}>' for h in cfg['headers']])
     declared = surface['functions'] | surface['variables'] | surface['types'] | surface['enumerators']
     exported = sorted(declared - set(conditional) - set(cfg.get('unbuilt', [])))
     cap = f'mwrap_{name}_capture'
