@@ -1,0 +1,39 @@
+// {{project.name}}: Zstandard through import mcpplibs.mwrap.zstd. The functions,
+// types and enumerators are Zstandard's own names; the constants are in
+// mcpplibs::mwrap::zstd::macros.
+import std;
+import mcpplibs.mwrap.zstd;
+
+namespace z = mcpplibs::mwrap::zstd::macros;
+
+int main(int argc, char** argv)
+{
+    std::string text;
+    if (argc > 1) {
+        std::ifstream file(argv[1], std::ios::binary);
+        text.assign(std::istreambuf_iterator<char>(file), {});
+    } else {
+        for (int i = 0; i < 200; ++i) text += std::format("Zstandard through a C++ module, entry {}\n", i % 10);
+    }
+
+    ZSTD_CCtx* cctx = ZSTD_createCCtx();
+    ZSTD_CCtx_setParameter(cctx, ZSTD_c_checksumFlag, 1);
+    std::string frame;
+    for (int level : {z::ZSTD_CLEVEL_DEFAULT, 19}) {
+        ZSTD_CCtx_setParameter(cctx, ZSTD_c_compressionLevel, level);
+        frame.resize(ZSTD_compressBound(text.size()));
+        const auto size = ZSTD_compress2(cctx, frame.data(), frame.size(), text.data(), text.size());
+        if (ZSTD_isError(size)) {
+            std::println("level {}: {}", level, ZSTD_getErrorName(size));
+            return 1;
+        }
+        frame.resize(size);
+        std::println("level {:2}: {} bytes -> {} bytes", level, text.size(), size);
+    }
+    ZSTD_freeCCtx(cctx);
+
+    std::string back(ZSTD_getFrameContentSize(frame.data(), frame.size()), '\0');
+    const auto n = ZSTD_decompress(back.data(), back.size(), frame.data(), frame.size());
+    std::println("zstd {}: restored {}", ZSTD_versionString(), !ZSTD_isError(n) && back == text ? "intact" : "DIFFERENT");
+    return !ZSTD_isError(n) && back == text ? 0 : 1;
+}

@@ -1,0 +1,47 @@
+# Module wrapper; upstream API preserved. Policy: mcpp-index/docs/mwrap.md.
+[package]
+namespace   = "mcpplibs.mwrap"
+name        = "zstd"
+version     = "1.5.7"
+description = "Zstandard 1.5.7 C++ modules for mcpp (import mcpplibs.mwrap.zstd;): one-shot and streaming compression and decompression, parameters, dictionaries and error codes over compat.zstd, with the constants of zstd.h as C++ constants"
+license     = "Apache-2.0"
+authors     = ["mcpp-community"]
+repo        = "https://github.com/mcpplibs/zstd-m"
+platforms   = ["linux", "macos", "windows"]
+
+[targets.zstd]
+kind = "lib"
+
+[build]
+sources      = ["src/*.cppm"]
+# <mwrap/zstd/macros.hpp>: the macros that take arguments.
+include_dirs = ["include"]
+
+[dependencies]
+compat.zstd = "1.5.7"
+
+[test]
+discover = ["tests/*.cpp"]
+
+[package.metadata.mwrap]
+upstream-version = "1.5.7"
+
+[[runtime.deploy]]
+from = "LICENSE"
+to   = "licenses/zstd"
+
+[[runtime.deploy]]
+from = "NOTICE"
+to   = "licenses/zstd"
+
+[[runtime.deploy]]
+from = "upstream/zstd/README.md"
+to   = "licenses/zstd/upstream/zstd"
+
+[[runtime.deploy]]
+from = "upstream/zstd/LICENSE"
+to   = "licenses/zstd/upstream/zstd"
+
+[[runtime.deploy]]
+from = "upstream/zstd/COPYING"
+to   = "licenses/zstd/upstream/zstd"

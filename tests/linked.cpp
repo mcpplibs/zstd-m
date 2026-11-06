@@ -1,0 +1,83 @@
+// Every function that mcpplibs.mwrap.zstd exports, by address: the program links only
+// where compat.zstd defines each one. Written by tools/generate.py.
+import std;
+import mcpplibs.mwrap.zstd;
+
+int main()
+{
+    // volatile: an optimiser may not drop a reference, so each one reaches the link.
+    const void* volatile functions[] = {
+        reinterpret_cast<const void*>(&ZSTD_CCtx_loadDictionary),
+        reinterpret_cast<const void*>(&ZSTD_CCtx_refCDict),
+        reinterpret_cast<const void*>(&ZSTD_CCtx_refPrefix),
+        reinterpret_cast<const void*>(&ZSTD_CCtx_reset),
+        reinterpret_cast<const void*>(&ZSTD_CCtx_setParameter),
+        reinterpret_cast<const void*>(&ZSTD_CCtx_setPledgedSrcSize),
+        reinterpret_cast<const void*>(&ZSTD_CStreamInSize),
+        reinterpret_cast<const void*>(&ZSTD_CStreamOutSize),
+        reinterpret_cast<const void*>(&ZSTD_DCtx_loadDictionary),
+        reinterpret_cast<const void*>(&ZSTD_DCtx_refDDict),
+        reinterpret_cast<const void*>(&ZSTD_DCtx_refPrefix),
+        reinterpret_cast<const void*>(&ZSTD_DCtx_reset),
+        reinterpret_cast<const void*>(&ZSTD_DCtx_setParameter),
+        reinterpret_cast<const void*>(&ZSTD_DStreamInSize),
+        reinterpret_cast<const void*>(&ZSTD_DStreamOutSize),
+        reinterpret_cast<const void*>(&ZSTD_cParam_getBounds),
+        reinterpret_cast<const void*>(&ZSTD_compress),
+        reinterpret_cast<const void*>(&ZSTD_compress2),
+        reinterpret_cast<const void*>(&ZSTD_compressBound),
+        reinterpret_cast<const void*>(&ZSTD_compressCCtx),
+        reinterpret_cast<const void*>(&ZSTD_compressStream),
+        reinterpret_cast<const void*>(&ZSTD_compressStream2),
+        reinterpret_cast<const void*>(&ZSTD_compress_usingCDict),
+        reinterpret_cast<const void*>(&ZSTD_compress_usingDict),
+        reinterpret_cast<const void*>(&ZSTD_createCCtx),
+        reinterpret_cast<const void*>(&ZSTD_createCDict),
+        reinterpret_cast<const void*>(&ZSTD_createCStream),
+        reinterpret_cast<const void*>(&ZSTD_createDCtx),
+        reinterpret_cast<const void*>(&ZSTD_createDDict),
+        reinterpret_cast<const void*>(&ZSTD_createDStream),
+        reinterpret_cast<const void*>(&ZSTD_dParam_getBounds),
+        reinterpret_cast<const void*>(&ZSTD_decompress),
+        reinterpret_cast<const void*>(&ZSTD_decompressDCtx),
+        reinterpret_cast<const void*>(&ZSTD_decompressStream),
+        reinterpret_cast<const void*>(&ZSTD_decompress_usingDDict),
+        reinterpret_cast<const void*>(&ZSTD_decompress_usingDict),
+        reinterpret_cast<const void*>(&ZSTD_defaultCLevel),
+        reinterpret_cast<const void*>(&ZSTD_endStream),
+        reinterpret_cast<const void*>(&ZSTD_findFrameCompressedSize),
+        reinterpret_cast<const void*>(&ZSTD_flushStream),
+        reinterpret_cast<const void*>(&ZSTD_freeCCtx),
+        reinterpret_cast<const void*>(&ZSTD_freeCDict),
+        reinterpret_cast<const void*>(&ZSTD_freeCStream),
+        reinterpret_cast<const void*>(&ZSTD_freeDCtx),
+        reinterpret_cast<const void*>(&ZSTD_freeDDict),
+        reinterpret_cast<const void*>(&ZSTD_freeDStream),
+        reinterpret_cast<const void*>(&ZSTD_getDecompressedSize),
+        reinterpret_cast<const void*>(&ZSTD_getDictID_fromCDict),
+        reinterpret_cast<const void*>(&ZSTD_getDictID_fromDDict),
+        reinterpret_cast<const void*>(&ZSTD_getDictID_fromDict),
+        reinterpret_cast<const void*>(&ZSTD_getDictID_fromFrame),
+        reinterpret_cast<const void*>(&ZSTD_getErrorCode),
+        reinterpret_cast<const void*>(&ZSTD_getErrorName),
+        reinterpret_cast<const void*>(&ZSTD_getErrorString),
+        reinterpret_cast<const void*>(&ZSTD_getFrameContentSize),
+        reinterpret_cast<const void*>(&ZSTD_initCStream),
+        reinterpret_cast<const void*>(&ZSTD_initDStream),
+        reinterpret_cast<const void*>(&ZSTD_isError),
+        reinterpret_cast<const void*>(&ZSTD_maxCLevel),
+        reinterpret_cast<const void*>(&ZSTD_minCLevel),
+        reinterpret_cast<const void*>(&ZSTD_sizeof_CCtx),
+        reinterpret_cast<const void*>(&ZSTD_sizeof_CDict),
+        reinterpret_cast<const void*>(&ZSTD_sizeof_CStream),
+        reinterpret_cast<const void*>(&ZSTD_sizeof_DCtx),
+        reinterpret_cast<const void*>(&ZSTD_sizeof_DDict),
+        reinterpret_cast<const void*>(&ZSTD_sizeof_DStream),
+        reinterpret_cast<const void*>(&ZSTD_versionNumber),
+        reinterpret_cast<const void*>(&ZSTD_versionString),
+    };
+    int missing = 0;
+    for (const void* f : functions) missing += f == nullptr;
+    std::println("68 functions linked, {} null", missing);
+    return missing != 0;
+}

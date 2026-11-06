@@ -1,0 +1,18 @@
+# What tools/generate.py cannot read from the headers; everything else it can.
+name          = "zstd"
+title         = "Zstandard 1.5.7"
+compat        = "zstd"
+version       = "1.5.7"
+license       = "BSD license or GPLv2"
+generated-on  = "linux"
+headers       = ["zstd.h", "zstd_errors.h"]
+owned         = ["zstd.h", "zstd_errors.h"]
+
+# How the headers write the declarations, not what Zstandard offers: symbol
+# visibility (ZSTDLIB_*, ZSTDERRORLIB_*), the deprecation attribute, and the
+# stringification steps that build ZSTD_VERSION_STRING, which is mapped.
+syntax = [
+  "ZSTDLIB_API", "ZSTDLIB_HIDDEN", "ZSTDLIB_VISIBLE",
+  "ZSTDERRORLIB_API", "ZSTDERRORLIB_HIDDEN", "ZSTDERRORLIB_VISIBLE",
+  "ZSTD_DEPRECATED", "ZSTD_QUOTE", "ZSTD_EXPAND_AND_QUOTE", "ZSTD_LIB_VERSION",
+]
