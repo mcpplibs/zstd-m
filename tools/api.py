@@ -81,11 +81,13 @@ def extract(compiler, flags, headers, owned=None):
 
 
 def guards(macros):
-    """The include guards among `macros`: an empty macro that the first
-    conditional directive of its file tests (`#ifndef G` or `#if !defined(G)`)."""
+    """The include guards among `macros`. An empty macro that the first
+    conditional directive of its file tests (`#ifndef G` or `#if !defined(G)`),
+    or a macro named like a guard (`..._H`, `..._H_<suffix>`, `..._INCLUDED`)
+    that its file defines right after `#ifndef G`."""
     found = set()
     for name, macro in macros.items():
-        if macro['params'] is not None or macro['body']:
+        if macro['params'] is not None:
             continue
         try:
             text = Path(macro['file']).read_text(encoding='utf-8', errors='replace')
@@ -93,8 +95,11 @@ def guards(macros):
             continue
         text = re.sub(r'/\*.*?\*/', ' ', text, flags=re.S)
         first = re.search(r'^\s*#\s*if.*$', text, flags=re.M)
-        if first and re.fullmatch(r'\s*#\s*(?:ifndef\s+' + name + r'|if\s+!\s*defined\s*\(?\s*' + name + r'\s*\)?)\s*',
-                                  first.group(0)):
+        tested_first = first and re.fullmatch(
+            r'\s*#\s*(?:ifndef\s+' + name + r'|if\s+!\s*defined\s*\(?\s*' + name + r'\s*\)?)\s*', first.group(0))
+        named = re.search(r'_H(?:_\w+)?$|_INCLUDED$', name) and re.search(
+            r'^\s*#\s*ifndef\s+' + name + r'\s*\n\s*#\s*define\s+' + name + r'\b', text, flags=re.M)
+        if (tested_first and not macro['body']) or named:
             found.add(name)
     return found
 

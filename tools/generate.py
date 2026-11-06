@@ -130,6 +130,8 @@ def render(cfg, surface, constants, types, kept):
         # A module-only unit has no NULL macro; in C++ nullptr is its meaning.
         body = re.sub(r'\bNULL\b', 'nullptr', qualify(kept[n]['body'], set(mapped), f'{scope}::macros'))
         header += ['', f'#ifndef {n}', f"#define {n}{kept[n]['params'] or ''} {body}".rstrip(), '#endif']
+    if not kept:
+        header += ['', '// The headers of this release define no such macro.']
     header += ['', f'#endif  // {guard}']
 
     test = [f'// Each constant and type of mcpplibs.mwrap.{name}.macros equals its macro. A macro',
