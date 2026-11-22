@@ -2,7 +2,7 @@
 [package]
 namespace   = "mcpplibs.mwrap"
 name        = "zstd"
-version     = "1.5.7"
+version     = "1.5.7.1"
 description = "Zstandard 1.5.7 C++ modules for mcpp (import mcpplibs.mwrap.zstd;): one-shot and streaming compression and decompression, parameters, dictionaries and error codes over compat.zstd, with the constants of zstd.h as C++ constants"
 license     = "Apache-2.0"
 authors     = ["mcpp-community"]

@@ -27,7 +27,7 @@ round-trip on every CI run over the same library.
 ## Getting started
 
 ```sh
-mcpp new squeeze --template mcpplibs.mwrap.zstd@1.5.7
+mcpp new squeeze --template mcpplibs.mwrap.zstd@1.5.7.1
 cd squeeze
 mcpp run
 ```
@@ -37,7 +37,7 @@ restores it and prints the sizes.
 
 ```toml
 [dependencies]
-"mcpplibs.mwrap.zstd" = "1.5.7"
+mcpplibs.mwrap.zstd = "1.5.7.1"
 ```
 
 ```cpp
