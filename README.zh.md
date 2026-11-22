@@ -24,7 +24,7 @@ C++ 常量。每次 CI 都在同一份库上运行上游自己的示例并完成
 ## 快速开始
 
 ```sh
-mcpp new squeeze --template mcpplibs.mwrap.zstd@1.5.7
+mcpp new squeeze --template mcpplibs.mwrap.zstd@1.5.7.1
 cd squeeze
 mcpp run
 ```
@@ -33,7 +33,7 @@ mcpp run
 
 ```toml
 [dependencies]
-"mcpplibs.mwrap.zstd" = "1.5.7"
+mcpplibs.mwrap.zstd = "1.5.7.1"
 ```
 
 ```cpp
